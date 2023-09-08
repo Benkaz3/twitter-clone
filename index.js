@@ -1,6 +1,18 @@
 import { tweetsData } from './data.js'
 import { v4 as uuidv4 } from 'https://jspm.dev/uuid';
 
+// adding a new function to save tweet data to local storage
+// the function is called whenever there are changes to 
+// the current tweets data in these functions: 
+// handleTweetBtnClick, handleLikeClick, handleRetweetClick, 
+// and handleReplyBtnClick
+let copiedTweetsData = JSON.parse(JSON.stringify(tweetsData))
+// console.log(copiedTweetsData)
+
+function saveTweetsToLocalStorage() {
+    localStorage.setItem('localStorageTweetsData', JSON.stringify(copiedTweetsData))
+  }
+
 document.addEventListener('click', function(e){
     if(e.target.dataset.like){
        handleLikeClick(e.target.dataset.like) 
@@ -20,7 +32,7 @@ document.addEventListener('click', function(e){
 })
  
 function handleLikeClick(tweetId){ 
-    const targetTweetObj = tweetsData.filter(function(tweet){
+    const targetTweetObj = copiedTweetsData.filter(function(tweet){
         return tweet.uuid === tweetId
     })[0]
 
@@ -32,10 +44,11 @@ function handleLikeClick(tweetId){
     }
     targetTweetObj.isLiked = !targetTweetObj.isLiked
     render()
+    saveTweetsToLocalStorage()
 }
 
 function handleRetweetClick(tweetId){
-    const targetTweetObj = tweetsData.filter(function(tweet){
+    const targetTweetObj = copiedTweetsData.filter(function(tweet){
         return tweet.uuid === tweetId
     })[0]
     
@@ -47,6 +60,7 @@ function handleRetweetClick(tweetId){
     }
     targetTweetObj.isRetweeted = !targetTweetObj.isRetweeted
     render()
+    saveTweetsToLocalStorage()
 }
 
 function handleReplyClick(replyId){
@@ -54,18 +68,19 @@ function handleReplyClick(replyId){
 }
 
 function handleReplyBtnClick(tweetId){
-    const targetTweetObj = tweetsData.filter(function(tweet){
+    const targetTweetObj = copiedTweetsData.filter(function(tweet){
         return tweet.uuid === tweetId
     })[0]
 
-    const replyInput = document.getElementById(`reply-input${tweetId}`)
+    const replyInput = document.getElementById(`reply-input-${tweetId}`)
     if(replyInput.value){
         targetTweetObj.replies.unshift({
-            handle: `@Scrimba`,
-            profilePic: `images/scrimbalogo.png`,
+            handle: `@QuipQuack`,
+            profilePic: `images/duck.png`,
             tweetText: replyInput.value
         })
         render()
+        saveTweetsToLocalStorage()
         replyInput.value = ''
     }
 }
@@ -74,9 +89,9 @@ function handleTweetBtnClick(){
     const tweetInput = document.getElementById('tweet-input')
 
     if(tweetInput.value){
-        tweetsData.unshift({
-            handle: `@Scrimba`,
-            profilePic: `images/scrimbalogo.png`,
+        copiedTweetsData.unshift({
+            handle: `@QuipQuack`,
+            profilePic: `images/duck.png`,
             likes: 0,
             retweets: 0,
             tweetText: tweetInput.value,
@@ -86,6 +101,7 @@ function handleTweetBtnClick(){
             uuid: uuidv4()
         })
     render()
+    saveTweetsToLocalStorage()
     tweetInput.value = ''
     }
 
@@ -94,7 +110,7 @@ function handleTweetBtnClick(){
 function getFeedHtml(){
     let feedHtml = ``
     
-    tweetsData.forEach(function(tweet){
+    copiedTweetsData.forEach(function(tweet){
         
         let likeIconClass = ''
         
@@ -159,8 +175,8 @@ function getFeedHtml(){
     <div class="hidden" id="replies-${tweet.uuid}">
         ${repliesHtml}
         <div class="reply-input-area">
-			<img src="images/scrimbalogo.png" class="profile-pic">
-			<textarea placeholder="Tweet your reply" id="reply-input${tweet.uuid}"></textarea>
+			<img src="images/duck.png" class="profile-pic">
+			<textarea placeholder="Tweet your reply" id="reply-input-${tweet.uuid}"></textarea>
 		    <button id="reply-btn" data-tweetreply="${tweet.uuid}">Reply</button>
         </div>
     </div>   
@@ -170,9 +186,17 @@ function getFeedHtml(){
    return feedHtml 
 }
 
-function render(){
-    document.getElementById('feed').innerHTML = getFeedHtml()
-}
+function render() {
+    let tweetsDataFromLocalStorage = localStorage.getItem('localStorageTweetsData');
+    if (tweetsDataFromLocalStorage !== null) {
+      try {
+        copiedTweetsData = JSON.parse(tweetsDataFromLocalStorage);
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+      }
+    }
+    document.getElementById('feed').innerHTML = getFeedHtml();
+  }
 
 render()
 
